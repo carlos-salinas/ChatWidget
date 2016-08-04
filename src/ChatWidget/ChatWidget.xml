@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<widget id="WidgetName.widget.WidgetName" needsEntityContext="true" xmlns="http://www.mendix.com/widget/1.0/">
-    <name>WidgetName</name>
-    <description>The description of this widget.</description>
+<widget id="ChatWidget.widget.ChatWidget" needsEntityContext="true" xmlns="http://www.mendix.com/widget/1.0/">
+    <name>ChatWidget</name>
+    <description>This widget provides a chat dialog format.</description>
 
     <icon />
 

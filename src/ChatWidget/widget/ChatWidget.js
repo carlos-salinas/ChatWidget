@@ -35,14 +35,14 @@ define([
     "dojo/_base/event",
 
     "WidgetName/lib/jquery-1.11.2",
-    "dojo/text!WidgetName/widget/template/WidgetName.html"
+    "dojo/text!ChatWidget/widget/template/ChatWidget.html"
 ], function (declare, _WidgetBase, _TemplatedMixin, dom, dojoDom, dojoProp, dojoGeometry, dojoClass, dojoStyle, dojoConstruct, dojoArray, dojoLang, dojoText, dojoHtml, dojoEvent, _jQuery, widgetTemplate) {
     "use strict";
 
     var $ = _jQuery.noConflict(true);
 
     // Declare widget's prototype.
-    return declare("WidgetName.widget.WidgetName", [ _WidgetBase, _TemplatedMixin ], {
+    return declare("ChatWidget.widget.ChatWidget", [ _WidgetBase, _TemplatedMixin ], {
         // _TemplatedMixin will create our dom node using this HTML template.
         templateString: widgetTemplate,
 
@@ -267,4 +267,4 @@ define([
     });
 });
 
-require(["WidgetName/widget/WidgetName"]);
+require(["ChatWidget/widget/ChatWidget"]);
