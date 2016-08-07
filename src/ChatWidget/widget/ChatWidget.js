@@ -47,10 +47,6 @@ define([
         templateString: widgetTemplate,
 
         // DOM elements
-        inputNodes: null,
-        colorSelectNode: null,
-        colorInputNode: null,
-        infoTextNode: null,
 
         // Parameters configured in the Modeler.
         mfToExecute: "",
@@ -122,53 +118,17 @@ define([
         // Attach events to HTML dom elements
         _setupEvents: function () {
             logger.debug(this.id + "._setupEvents");
-            this.connect(this.colorSelectNode, "change", function (e) {
-                // Function from mendix object to set an attribute.
-                this._contextObj.set(this.backgroundColor, this.colorSelectNode.value);
-            });
-
-            this.connect(this.infoTextNode, "click", function (e) {
-                // Only on mobile stop event bubbling!
-                this._stopBubblingEventOnMobile(e);
-
-                // If a microflow has been set execute the microflow on a click.
-                if (this.mfToExecute !== "") {
-                    mx.data.action({
-                        params: {
-                            applyto: "selection",
-                            actionname: this.mfToExecute,
-                            guids: [ this._contextObj.getGuid() ]
-                        },
-                        store: {
-                            caller: this.mxform
-                        },
-                        callback: function (obj) {
-                            //TODO what to do when all is ok!
-                        },
-                        error: dojoLang.hitch(this, function (error) {
-                            logger.error(this.id + ": An error occurred while executing microflow: " + error.description);
-                        })
-                    }, this);
-                }
-            });
         },
 
         // Rerender the interface.
         _updateRendering: function (callback) {
             logger.debug(this.id + "._updateRendering");
-            this.colorSelectNode.disabled = this._readOnly;
-            this.colorInputNode.disabled = this._readOnly;
+
 
             if (this._contextObj !== null) {
                 dojoStyle.set(this.domNode, "display", "block");
 
                 var colorValue = this._contextObj.get(this.backgroundColor);
-
-                this.colorInputNode.value = colorValue;
-                this.colorSelectNode.value = colorValue;
-
-                dojoHtml.set(this.infoTextNode, this.messageString);
-                dojoStyle.set(this.infoTextNode, "background-color", colorValue);
             } else {
                 dojoStyle.set(this.domNode, "display", "none");
             }
