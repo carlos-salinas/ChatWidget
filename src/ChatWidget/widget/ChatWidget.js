@@ -47,11 +47,13 @@ define([
         templateString: widgetTemplate,
 
         // DOM elements
+        sendMessageInputNode: null,
+        sendMessageButtonNode: null,
 
         // Parameters configured in the Modeler.
-        mfToExecute: "",
-        messageString: "",
-        backgroundColor: "",
+        messageEntity: null,
+        datasourceMf: null,
+        mfToSendMessage: "",
 
         // Internal variables. Non-primitives created in the prototype are shared between all widget instances.
         _handles: null,
@@ -118,6 +120,40 @@ define([
         // Attach events to HTML dom elements
         _setupEvents: function () {
             logger.debug(this.id + "._setupEvents");
+
+            this.connect(this.sendMessageButtonNode, "click", function (e){
+                // Only on mobile stop event bubbling!
+                this._stopBubblingEventOnMobile(e);
+
+                // Create a object messageEntity to set the message text
+                mx.data.create({
+                    entity: this.messageEntity,
+                    callback: dojoLang.hitch(this, function (messageObject) {
+
+                        messageObject.set("Message", this.sendMessageInputNode.value);
+
+                        // If a microflow has been set execute the microflow on a click.
+                        if (this.mfToSendMessage !== "") {
+                            mx.data.action({
+                                params: {
+                                    applyto: "selection",
+                                    actionname: this.mfToSendMessage,
+                                    guids: [ messageObject.getGuid() ]
+                                },
+                                callback: function (obj) {
+                                    //TODO what to do when all is ok!
+                                },
+                                error: dojoLang.hitch(this, function (error) {
+                                    logger.error(this.id + ": An error occurred while executing microflow: " + error.description);
+                                })
+                            }, this);
+                        }
+                    }),
+                    error: dojoLang.hitch(this, function(error){
+                        logger.error("It failed to create an object of type " + this.messageEntity + ": " + error.description);
+                    })
+                });
+            });
         },
 
         // Rerender the interface.
@@ -128,7 +164,6 @@ define([
             if (this._contextObj !== null) {
                 dojoStyle.set(this.domNode, "display", "block");
 
-                var colorValue = this._contextObj.get(this.backgroundColor);
             } else {
                 dojoStyle.set(this.domNode, "display", "none");
             }
@@ -145,14 +180,10 @@ define([
             logger.debug(this.id + "._handleValidation");
             this._clearValidations();
 
-            var validation = validations[0],
-                message = validation.getReasonByAttribute(this.backgroundColor);
-
             if (this._readOnly) {
-                validation.removeAttribute(this.backgroundColor);
+
             } else if (message) {
                 this._addValidation(message);
-                validation.removeAttribute(this.backgroundColor);
             }
         },
 
@@ -209,7 +240,6 @@ define([
 
                 var attrHandle = mx.data.subscribe({
                     guid: this._contextObj.getGuid(),
-                    attr: this.backgroundColor,
                     callback: dojoLang.hitch(this, function (guid, attr, attrValue) {
                         this._updateRendering();
                     })

@@ -63,11 +63,10 @@
             </div>
             <div class="chat-panel-input">
                 <div class="input-group">
-                    <input id="btn-input" type="text" class="form-control input-sm" placeholder="Type your message here..." />
+                    <input id="btn-input" type="text" class="form-control input-sm" placeholder="Type your message here..." data-dojo-attach-point="sendMessageInputNode"/>
                     <span class="input-group-btn">
-                  <button class="btn btn-success btn-sm" id="btn-chat">
-                      Send</button>
-              </span>
+                         <button class="btn btn-success btn-sm" id="btn-chat" data-dojo-attach-point="sendMessageButtonNode">Send</button>
+                    </span>
                 </div>
             </div>
         </div>

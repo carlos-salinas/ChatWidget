@@ -1,29 +1,27 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<widget id="ChatWidget.widget.ChatWidget" needsEntityContext="true" xmlns="http://www.mendix.com/widget/1.0/">
+<widget id="ChatWidget.widget.ChatWidget" needsEntityContext="false" xmlns="http://www.mendix.com/widget/1.0/">
     <name>ChatWidget</name>
     <description>This widget provides a chat dialog format.</description>
 
     <icon />
 
     <properties>
-        <property key="backgroundColor" type="attribute">
-            <caption>Background Color</caption>
-            <category>Appearance</category>
-            <description>The background color of the widget.</description>
-            <attributeTypes>
-                <attributeType name="String" />
-            </attributeTypes>
+        <property key="messageEntity" type="entity">
+            <caption>Message Entity</caption>
+            <category>Data source</category>
+            <description>The entity which represents each message in the conversation</description>
         </property>
-        <property key="messageString" type="string" required="true" defaultValue="">
-            <caption>Message</caption>
-            <category>Appearance</category>
-            <description>The message visible within the widget.</description>
+        <property key="datasourceMf" type="microflow" required="true">
+            <caption>Data source microflow</caption>
+            <category>Data source</category>
+            <description>The list of messages which belong to a conversation</description>
+            <returnType type="Void" />
         </property>
-        <property key="mfToExecute" type="microflow" required="false" defaultValue="">
+        <property key="mfToSendMessage" type="microflow" required="true" entityProperty="messageEntity">
             <caption>Microflow</caption>
             <category>Behavior</category>
-            <description>The microflow to execute on click.</description>
-            <returnType type="Boolean" />
+            <description>The microflow to execute on send a message.</description>
+            <returnType type="Void" />
         </property>
     </properties>
 </widget>
