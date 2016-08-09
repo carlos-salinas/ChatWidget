@@ -47,6 +47,7 @@ define([
         templateString: widgetTemplate,
 
         // DOM elements
+        chatListnode: null,
         sendMessageInputNode: null,
         sendMessageButtonNode: null,
 
@@ -60,11 +61,13 @@ define([
         _contextObj: null,
         _alertDiv: null,
         _readOnly: false,
+        _messageObjects: null,
 
         // dojo.declare.constructor is called to construct the widget instance. Implement to initialize non-primitive properties.
         constructor: function () {
             logger.debug(this.id + ".constructor");
             this._handles = [];
+            this._messageObjects= [];
         },
 
         // dijit._WidgetBase.postCreate is called after constructing the widget. Implement to do extra setup work.
@@ -85,6 +88,7 @@ define([
 
             this._contextObj = obj;
             this._resetSubscriptions();
+            this._fetchObjects();
             this._updateRendering(callback); // We're passing the callback to updateRendering to be called after DOM-manipulation
         },
 
@@ -130,6 +134,7 @@ define([
                     entity: this.messageEntity,
                     callback: dojoLang.hitch(this, function (messageObject) {
 
+                        messageObject.set("Author", mx.session.getUserName());
                         messageObject.set("Message", this.sendMessageInputNode.value);
 
                         // If a microflow has been set execute the microflow on a click.
@@ -160,21 +165,48 @@ define([
         _updateRendering: function (callback) {
             logger.debug(this.id + "._updateRendering");
 
-
-            if (this._contextObj !== null) {
-                dojoStyle.set(this.domNode, "display", "block");
-
-            } else {
-                dojoStyle.set(this.domNode, "display", "none");
-            }
-
             // Important to clear all validations!
             this._clearValidations();
+
+            // Remove the previous conversation
+            domConstruct.empty(this.chatListnode);
+
+            // Render each message of the conversation
+            this._messageObjects.forEach(this._renderMessage);
 
             // The callback, coming from update, needs to be executed, to let the page know it finished rendering
             mendix.lang.nullExec(callback);
         },
 
+        _renderMessage: function(obj, index, array){
+            logger.debug(this.id + "._renderMessage");
+
+
+
+        },
+        _createMessageNode: function(){
+            logger.debug(this.id + "._createMessageNode");
+
+            var messageLiClass = "";
+            var messageSpanClass = "";
+            var messageUserImgSrc = "";
+            if (index % 2 == 0){
+                messageLiClass = "left clearfix";
+                messageSpanClass = "chat-img pull-right";
+                messageUserImgSrc = "http://placehold.it/50/FA6F57/fff&text=ME";
+            }
+            else {
+                messageLiClass = "right clearfix";
+                messageSpanClass = "chat-img pull-left";
+                messageUserImgSrc = "http://placehold.it/50/55C1E7/fff&text=U";
+            }
+
+            var messageLiNode = dojoConstruct.create("li", {class: messageLiClass});
+
+            dojoConstruct.create("span", {class: messageSpanClass, innerHTLM: "<img src=\"" + messageUserImgSrc + "\" alt=\"User Avatar\" class=\"img-circle\" />"}, messageLiNode);
+
+            return messageLiNode;
+        },
         // Handle validations.
         _handleValidation: function (validations) {
             logger.debug(this.id + "._handleValidation");
@@ -253,6 +285,58 @@ define([
 
                 this._handles = [ objectHandle, attrHandle, validationHandle ];
             }
+        },
+        // Fetch the messages from then given MF
+        _fetchObjects: function(){
+            logger.debug(this.id + "._fetchObjects");
+
+            if (this.datasourceMf){
+                this._execMF(null, this.datasourceMf, dojoLang.hitch(this, this._prepareMessages));
+            }
+        },
+        _execMF: function (obj, mf, cb) {
+            logger.debug(this.id + "._execMF", mf);
+            if (mf) {
+                var params = {
+                    applyto: "selection",
+                    actionname: mf,
+                    guids: []
+                };
+                if (obj) {
+                    params.guids = [obj.getGuid()];
+                }
+                logger.debug(this.id + "._execMF params:", params);
+                mx.data.action({
+                    store: {
+                        caller: this.mxform
+                    },
+                    params: params,
+                    callback: dojoLang.hitch(this, function (objs) {
+                        logger.debug(this.id + "._execMF callback:", objs ? objs.length + " objects" : "null");
+                        if (cb) {
+                            cb(objs);
+                        }
+                    }),
+                    error: function (error) {
+                        if (cb) {
+                            cb();
+                        }
+                        console.warn(error.description);
+                    }
+                }, this);
+
+            } else if (cb) {
+                cb();
+            }
+        },
+        _prepareMessages: function (objs) {
+            logger.debug(this.id + "._prepareMessages");
+
+            if (typeof objs === "undefined" || objs === "" || objs.length === 0) {
+                return;
+            }
+
+            this._messageObjects = objs.slice();
         }
     });
 });

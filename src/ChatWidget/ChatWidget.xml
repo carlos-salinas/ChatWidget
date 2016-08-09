@@ -15,7 +15,7 @@
             <caption>Data source microflow</caption>
             <category>Data source</category>
             <description>The list of messages which belong to a conversation</description>
-            <returnType type="Void" />
+            <returnType type="Object" entityProperty="messageEntity" isList="true"/>
         </property>
         <property key="mfToSendMessage" type="microflow" required="true" entityProperty="messageEntity">
             <caption>Microflow</caption>
