@@ -169,10 +169,10 @@ define([
             this._clearValidations();
 
             // Remove the previous conversation
-            domConstruct.empty(this.chatListnode);
+            dojoConstruct.empty(this.chatListnode);
 
             // Render each message of the conversation
-            this._messageObjects.forEach(this._renderMessage);
+            this._messageObjects.forEach(dojoLang.hitch(this, this._renderMessage));
 
             // The callback, coming from update, needs to be executed, to let the page know it finished rendering
             mendix.lang.nullExec(callback);
@@ -181,29 +181,45 @@ define([
         _renderMessage: function(obj, index, array){
             logger.debug(this.id + "._renderMessage");
 
-
-
+            var messageNode = this._createMessageNode(obj, index);
+            dojoConstruct.place(messageNode, this.chatListnode, "first");
         },
-        _createMessageNode: function(){
+        _createMessageNode: function(obj, index){
             logger.debug(this.id + "._createMessageNode");
 
             var messageLiClass = "";
             var messageSpanClass = "";
             var messageUserImgSrc = "";
+            var messageHeaderDivNode = dojoConstruct.create("div", {"class": "header"});
+            var messageChatbodyTextPNode = null;
+
             if (index % 2 == 0){
-                messageLiClass = "left clearfix";
+                messageLiClass = "right clearfix";
                 messageSpanClass = "chat-img pull-right";
                 messageUserImgSrc = "http://placehold.it/50/FA6F57/fff&text=ME";
+
+                dojoConstruct.create("small", {"class": "text-muted", "innerHTML": "<span class=\"glyphicon glyphicon-time\"></span>12 mins ago"}, messageHeaderDivNode);
+                dojoConstruct.create("strong", {"class": "pull-right  primary-font", "innerHTML": obj.get("Author")}, messageHeaderDivNode);
+                messageChatbodyTextPNode = dojoConstruct.create("p", {"class": "text-right", "innerHTML": obj.get("Message")});
             }
             else {
-                messageLiClass = "right clearfix";
+                messageLiClass = "left clearfix";
                 messageSpanClass = "chat-img pull-left";
                 messageUserImgSrc = "http://placehold.it/50/55C1E7/fff&text=U";
+
+                dojoConstruct.create("strong", {"class": "primary-font", "innerHTML": obj.get("Author")}, messageHeaderDivNode);
+                dojoConstruct.create("small", {"class": "pull-right text-muted", "innerHTML": "<span class=\"glyphicon glyphicon-time\"></span>12 mins ago"}, messageHeaderDivNode);
+                messageChatbodyTextPNode = dojoConstruct.create("p", {"innerHTML": obj.get("Message")});
             }
 
-            var messageLiNode = dojoConstruct.create("li", {class: messageLiClass});
+            var messageLiNode = dojoConstruct.create("li", {"class": messageLiClass});
+             dojoConstruct.create("span", {"class": messageSpanClass, "innerHTML": "<img src=\"" + messageUserImgSrc + "\" alt=\"User Avatar\" class=\"img-circle\" />"}, messageLiNode);
 
-            dojoConstruct.create("span", {class: messageSpanClass, innerHTLM: "<img src=\"" + messageUserImgSrc + "\" alt=\"User Avatar\" class=\"img-circle\" />"}, messageLiNode);
+            var messageChatbodyDivNode =  dojoConstruct.create("div", {"class": "chat-body clearfix"}, null, messageLiNode);
+
+            dojoConstruct.place(messageChatbodyDivNode, messageLiNode, "last");
+            dojoConstruct.place(messageHeaderDivNode, messageChatbodyDivNode, "last");
+            dojoConstruct.place(messageChatbodyTextPNode, messageChatbodyDivNode, "last");
 
             return messageLiNode;
         },
@@ -262,29 +278,14 @@ define([
             this._unsubscribe();
 
             // When a mendix object exists create subscribtions.
-            if (this._contextObj) {
-                var objectHandle = mx.data.subscribe({
-                    guid: this._contextObj.getGuid(),
-                    callback: dojoLang.hitch(this, function (guid) {
-                        this._updateRendering();
-                    })
-                });
+            var objectHandle = mx.data.subscribe({
+                entity: this.messageEntity,
+                callback: dojoLang.hitch(this, function (entity) {
+                    this._fetchObjects();
+                })
+            });
 
-                var attrHandle = mx.data.subscribe({
-                    guid: this._contextObj.getGuid(),
-                    callback: dojoLang.hitch(this, function (guid, attr, attrValue) {
-                        this._updateRendering();
-                    })
-                });
-
-                var validationHandle = mx.data.subscribe({
-                    guid: this._contextObj.getGuid(),
-                    val: true,
-                    callback: dojoLang.hitch(this, this._handleValidation)
-                });
-
-                this._handles = [ objectHandle, attrHandle, validationHandle ];
-            }
+            this._handles = [ objectHandle ];
         },
         // Fetch the messages from then given MF
         _fetchObjects: function(){
@@ -337,6 +338,8 @@ define([
             }
 
             this._messageObjects = objs.slice();
+
+            this._updateRendering();
         }
     });
 });
