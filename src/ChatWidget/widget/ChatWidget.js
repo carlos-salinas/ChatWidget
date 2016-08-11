@@ -47,11 +47,13 @@ define([
         templateString: widgetTemplate,
 
         // DOM elements
+        chatNode: null,
         chatListnode: null,
         sendMessageInputNode: null,
         sendMessageButtonNode: null,
 
         // Parameters configured in the Modeler.
+        chatHeight: null,
         messageEntity: null,
         datasourceMf: null,
         mfToSendMessage: "",
@@ -77,6 +79,13 @@ define([
             if (this.readOnly || this.get("disabled") || this.readonly) {
               this._readOnly = true;
             }
+
+            // Define the height of the widget
+            dojoStyle.set(this.chatNode, {
+                "height": this.chatHeight,
+                "max-heigh": "100%",
+                "position": "relative"
+            });
 
             this._updateRendering();
             this._setupEvents();
@@ -145,9 +154,10 @@ define([
                                     actionname: this.mfToSendMessage,
                                     guids: [ messageObject.getGuid() ]
                                 },
-                                callback: function (obj) {
-                                    //TODO what to do when all is ok!
-                                },
+                                callback: dojoLang.hitch(this, function (obj) {
+                                    // Once the message arrived, the input has to be cleaned up
+                                    this.sendMessageInputNode.value = "";
+                                }),
                                 error: dojoLang.hitch(this, function (error) {
                                     logger.error(this.id + ": An error occurred while executing microflow: " + error.description);
                                 })
@@ -174,6 +184,9 @@ define([
             // Render each message of the conversation
             this._messageObjects.forEach(dojoLang.hitch(this, this._renderMessage));
 
+            // Make visible the last message
+            this.chatListnode.scrollIntoView(false);
+
             // The callback, coming from update, needs to be executed, to let the page know it finished rendering
             mendix.lang.nullExec(callback);
         },
@@ -182,7 +195,7 @@ define([
             logger.debug(this.id + "._renderMessage");
 
             var messageNode = this._createMessageNode(obj, index);
-            dojoConstruct.place(messageNode, this.chatListnode, "first");
+            dojoConstruct.place(messageNode, this.chatListnode, "last");
         },
         _createMessageNode: function(obj, index){
             logger.debug(this.id + "._createMessageNode");
@@ -205,7 +218,7 @@ define([
             else {
                 messageLiClass = "left clearfix";
                 messageSpanClass = "chat-img pull-left";
-                messageUserImgSrc = "http://placehold.it/50/55C1E7/fff&text=U";
+                messageUserImgSrc = "http://placehold.it/50/55C1E7/fff&text=WS";
 
                 dojoConstruct.create("strong", {"class": "primary-font", "innerHTML": obj.get("Author")}, messageHeaderDivNode);
                 dojoConstruct.create("small", {"class": "pull-right text-muted", "innerHTML": "<span class=\"glyphicon glyphicon-time\"></span>12 mins ago"}, messageHeaderDivNode);

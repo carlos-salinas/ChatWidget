@@ -6,6 +6,11 @@
     <icon />
 
     <properties>
+        <property key="chatHeight" type="string" required="true">
+            <caption>Height of the chat widget</caption>
+            <category>Data source</category>
+            <description>This height defines how bog is the chat</description>
+        </property>
         <property key="messageEntity" type="entity">
             <caption>Message Entity</caption>
             <category>Data source</category>
