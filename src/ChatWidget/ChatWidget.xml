@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<widget id="ChatWidget.widget.ChatWidget" needsEntityContext="false" xmlns="http://www.mendix.com/widget/1.0/">
+<widget id="ChatWidget.widget.ChatWidget" needsEntityContext="true" xmlns="http://www.mendix.com/widget/1.0/">
     <name>ChatWidget</name>
     <description>This widget provides a chat dialog format.</description>
 
@@ -11,12 +11,17 @@
             <category>Data source</category>
             <description>This height defines how bog is the chat</description>
         </property>
+        <property key="conversationEntity" type="entity">
+            <caption>Conversation Entity</caption>
+            <category>Data source</category>
+            <description>The entity which arranges the identifiers of conversation and client</description>
+        </property>
         <property key="messageEntity" type="entity">
             <caption>Message Entity</caption>
             <category>Data source</category>
             <description>The entity which represents each message in the conversation</description>
         </property>
-        <property key="datasourceMf" type="microflow" required="true">
+        <property key="datasourceMf" type="microflow" required="true" entityProperty="conversationEntity">
             <caption>Data source microflow</caption>
             <category>Data source</category>
             <description>The list of messages which belong to a conversation</description>

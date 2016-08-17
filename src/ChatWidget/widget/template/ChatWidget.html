@@ -1,5 +1,6 @@
 <div class="Chatwidget" data-dojo-attach-point="chatNode">
     <div class="chat-panel">
+        <div class="chat-padder" data-dojo-attach-point="chatPadderNode"></div>
         <div class="chat-panel-dialog">
             <ul class="chat" data-dojo-attach-point="chatListnode">
                 <li class="left clearfix">
@@ -64,13 +65,13 @@
                 </li>
             </ul>
         </div>
-        <div class="chat-panel-input">
-            <div class="input-group">
-                <input id="btn-input" type="text" class="form-control input-sm" placeholder="Type your message here..." data-dojo-attach-point="sendMessageInputNode"/>
-                <span class="input-group-btn">
+    </div>
+    <div class="chat-panel-input">
+        <div class="input-group">
+            <input id="btn-input" type="text" class="form-control input-sm" placeholder="Type your message here..." data-dojo-attach-point="sendMessageInputNode"/>
+            <span class="input-group-btn">
                      <button class="btn btn-success btn-sm" id="btn-chat" data-dojo-attach-point="sendMessageButtonNode">Send</button>
                 </span>
-            </div>
         </div>
     </div>
 </div>

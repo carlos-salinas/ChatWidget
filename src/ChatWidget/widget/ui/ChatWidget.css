@@ -49,8 +49,12 @@
 
 /* Custom Styles for the widget*/
 .chat-panel {
-    overflow-y: scroll;
+    overflow-y: auto;
     height: calc(100% - 65px);
+}
+
+.chat-padder {
+    height: 100%;
 }
 
 .chat-panel-dialog {

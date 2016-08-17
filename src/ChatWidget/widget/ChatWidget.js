@@ -48,12 +48,14 @@ define([
 
         // DOM elements
         chatNode: null,
+        chatPadderNode: null,
         chatListnode: null,
         sendMessageInputNode: null,
         sendMessageButtonNode: null,
 
         // Parameters configured in the Modeler.
         chatHeight: null,
+        conversationEntity: null,
         messageEntity: null,
         datasourceMf: null,
         mfToSendMessage: "",
@@ -145,6 +147,8 @@ define([
 
                         messageObject.set("Author", mx.session.getUserName());
                         messageObject.set("Message", this.sendMessageInputNode.value);
+                        messageObject.set("ConversationId", this._contextObj.get("ConversationID"));
+                        messageObject.set("ClientId", this._contextObj.get("ClientID"));
 
                         // If a microflow has been set execute the microflow on a click.
                         if (this.mfToSendMessage !== "") {
@@ -196,6 +200,10 @@ define([
 
             var messageNode = this._createMessageNode(obj, index);
             dojoConstruct.place(messageNode, this.chatListnode, "last");
+
+            // Shrink the padder container to crea te effect the message are stacked from the bottom to the top
+            var calculatedHeight = this.chatPadderNode.offsetHeight -  messageNode.offsetHeight;
+            dojoStyle.set(this.chatPadderNode, "height", calculatedHeight.toString() + "px");
         },
         _createMessageNode: function(obj, index){
             logger.debug(this.id + "._createMessageNode");
@@ -207,15 +215,6 @@ define([
             var messageChatbodyTextPNode = null;
 
             if (index % 2 == 0){
-                messageLiClass = "right clearfix";
-                messageSpanClass = "chat-img pull-right";
-                messageUserImgSrc = "http://placehold.it/50/FA6F57/fff&text=ME";
-
-                dojoConstruct.create("small", {"class": "text-muted", "innerHTML": "<span class=\"glyphicon glyphicon-time\"></span>12 mins ago"}, messageHeaderDivNode);
-                dojoConstruct.create("strong", {"class": "pull-right  primary-font", "innerHTML": obj.get("Author")}, messageHeaderDivNode);
-                messageChatbodyTextPNode = dojoConstruct.create("p", {"class": "text-right", "innerHTML": obj.get("Message")});
-            }
-            else {
                 messageLiClass = "left clearfix";
                 messageSpanClass = "chat-img pull-left";
                 messageUserImgSrc = "http://placehold.it/50/55C1E7/fff&text=WS";
@@ -223,6 +222,15 @@ define([
                 dojoConstruct.create("strong", {"class": "primary-font", "innerHTML": obj.get("Author")}, messageHeaderDivNode);
                 dojoConstruct.create("small", {"class": "pull-right text-muted", "innerHTML": "<span class=\"glyphicon glyphicon-time\"></span>12 mins ago"}, messageHeaderDivNode);
                 messageChatbodyTextPNode = dojoConstruct.create("p", {"innerHTML": obj.get("Message")});
+            }
+            else {
+                messageLiClass = "right clearfix";
+                messageSpanClass = "chat-img pull-right";
+                messageUserImgSrc = "http://placehold.it/50/FA6F57/fff&text=ME";
+
+                dojoConstruct.create("small", {"class": "text-muted", "innerHTML": "<span class=\"glyphicon glyphicon-time\"></span>12 mins ago"}, messageHeaderDivNode);
+                dojoConstruct.create("strong", {"class": "pull-right  primary-font", "innerHTML": obj.get("Author")}, messageHeaderDivNode);
+                messageChatbodyTextPNode = dojoConstruct.create("p", {"class": "text-right", "innerHTML": obj.get("Message")});
             }
 
             var messageLiNode = dojoConstruct.create("li", {"class": messageLiClass});
@@ -305,7 +313,7 @@ define([
             logger.debug(this.id + "._fetchObjects");
 
             if (this.datasourceMf){
-                this._execMF(null, this.datasourceMf, dojoLang.hitch(this, this._prepareMessages));
+                this._execMF(this._contextObj, this.datasourceMf, dojoLang.hitch(this, this._prepareMessages));
             }
         },
         _execMF: function (obj, mf, cb) {
