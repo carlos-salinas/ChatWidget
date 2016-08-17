@@ -2,12 +2,18 @@
 .chat
 {
     list-style: none;
+    position: absolute;
+    bottom: 0;
     margin: 0;
     padding: 0;
+    max-height: 100%;
+    width: 100%;
 }
 
 .chat li
 {
+    margin-left: 15px;
+    margin-right: 15px;
     margin-bottom: 10px;
     padding-bottom: 5px;
     border-bottom: 1px dotted #B3A9A9;
@@ -49,16 +55,9 @@
 
 /* Custom Styles for the widget*/
 .chat-panel {
-    overflow-y: auto;
+    position: relative;
     height: calc(100% - 65px);
-}
-
-.chat-padder {
-    height: 100%;
-}
-
-.chat-panel-dialog {
-    margin: 0px 15px;
+    overflow-y: auto;
 }
 
 .chat-panel-input {

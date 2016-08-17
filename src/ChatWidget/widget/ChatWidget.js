@@ -20,23 +20,14 @@ define([
     "dojo/_base/declare",
     "mxui/widget/_WidgetBase",
     "dijit/_TemplatedMixin",
-
     "mxui/dom",
-    "dojo/dom",
-    "dojo/dom-prop",
-    "dojo/dom-geometry",
-    "dojo/dom-class",
     "dojo/dom-style",
     "dojo/dom-construct",
     "dojo/_base/array",
     "dojo/_base/lang",
-    "dojo/text",
-    "dojo/html",
-    "dojo/_base/event",
-
     "ChatWidget/lib/jquery-1.11.2",
     "dojo/text!ChatWidget/widget/template/ChatWidget.html"
-], function (declare, _WidgetBase, _TemplatedMixin, dom, dojoDom, dojoProp, dojoGeometry, dojoClass, dojoStyle, dojoConstruct, dojoArray, dojoLang, dojoText, dojoHtml, dojoEvent, _jQuery, widgetTemplate) {
+], function (declare, _WidgetBase, _TemplatedMixin, dom, dojoStyle, dojoConstruct, dojoArray, dojoLang, _jQuery, widgetTemplate) {
     "use strict";
 
     var $ = _jQuery.noConflict(true);
@@ -48,7 +39,6 @@ define([
 
         // DOM elements
         chatNode: null,
-        chatPadderNode: null,
         chatListnode: null,
         sendMessageInputNode: null,
         sendMessageButtonNode: null,
@@ -63,8 +53,6 @@ define([
         // Internal variables. Non-primitives created in the prototype are shared between all widget instances.
         _handles: null,
         _contextObj: null,
-        _alertDiv: null,
-        _readOnly: false,
         _messageObjects: null,
 
         // dojo.declare.constructor is called to construct the widget instance. Implement to initialize non-primitive properties.
@@ -85,8 +73,7 @@ define([
             // Define the height of the widget
             dojoStyle.set(this.chatNode, {
                 "height": this.chatHeight,
-                "max-heigh": "100%",
-                "position": "relative"
+                "width": "100%",
             });
 
             this._updateRendering();
@@ -150,23 +137,25 @@ define([
                         messageObject.set("ConversationId", this._contextObj.get("ConversationID"));
                         messageObject.set("ClientId", this._contextObj.get("ClientID"));
 
-                        // If a microflow has been set execute the microflow on a click.
-                        if (this.mfToSendMessage !== "") {
-                            mx.data.action({
-                                params: {
-                                    applyto: "selection",
-                                    actionname: this.mfToSendMessage,
-                                    guids: [ messageObject.getGuid() ]
-                                },
-                                callback: dojoLang.hitch(this, function (obj) {
-                                    // Once the message arrived, the input has to be cleaned up
-                                    this.sendMessageInputNode.value = "";
-                                }),
-                                error: dojoLang.hitch(this, function (error) {
-                                    logger.error(this.id + ": An error occurred while executing microflow: " + error.description);
-                                })
-                            }, this);
-                        }
+                        mx.data.commit({
+                            mxobj: messageObject,
+                            callback: dojoLang.hitch(this, function(){
+
+                                // Render the message in the chat
+                                this._renderMessage(messageObject, 1, null);
+
+                                // If a microflow has been set execute the microflow on a click.
+                                if (this.mfToSendMessage !== "") {
+                                    this._execMF(messageObject, this.mfToSendMessage, dojoLang.hitch(this, function(){
+                                        // Once the message arrived, the input has to be cleaned up
+                                        this.sendMessageInputNode.value = "";
+                                    }));
+                                }
+                            }),
+                            error: dojoLang.hitch(this, function(error){
+                                logger.error("It failed to commit the object " + messageObject.getGuid() + ": " + error.description);
+                            })
+                        });
                     }),
                     error: dojoLang.hitch(this, function(error){
                         logger.error("It failed to create an object of type " + this.messageEntity + ": " + error.description);
@@ -188,9 +177,6 @@ define([
             // Render each message of the conversation
             this._messageObjects.forEach(dojoLang.hitch(this, this._renderMessage));
 
-            // Make visible the last message
-            this.chatListnode.scrollIntoView(false);
-
             // The callback, coming from update, needs to be executed, to let the page know it finished rendering
             mendix.lang.nullExec(callback);
         },
@@ -201,10 +187,9 @@ define([
             var messageNode = this._createMessageNode(obj, index);
             dojoConstruct.place(messageNode, this.chatListnode, "last");
 
-            // Shrink the padder container to crea te effect the message are stacked from the bottom to the top
-            var calculatedHeight = this.chatPadderNode.offsetHeight -  messageNode.offsetHeight;
-            dojoStyle.set(this.chatPadderNode, "height", calculatedHeight.toString() + "px");
+            this._updateScroll();
         },
+
         _createMessageNode: function(obj, index){
             logger.debug(this.id + "._createMessageNode");
 
@@ -244,43 +229,33 @@ define([
 
             return messageLiNode;
         },
+
+        // Make the last message visible
+        _updateScroll: function (){
+            logger.debug(this.id + "._updateScroll");
+            var chatPanelNode = document.querySelectorAll('.chat-panel')[0];
+            chatPanelNode.scrollTop = chatPanelNode.scrollHeight;
+        },
+
         // Handle validations.
         _handleValidation: function (validations) {
             logger.debug(this.id + "._handleValidation");
             this._clearValidations();
-
-            if (this._readOnly) {
-
-            } else if (message) {
-                this._addValidation(message);
-            }
         },
 
         // Clear validations.
         _clearValidations: function () {
             logger.debug(this.id + "._clearValidations");
-            dojoConstruct.destroy(this._alertDiv);
-            this._alertDiv = null;
         },
 
         // Show an error message.
         _showError: function (message) {
             logger.debug(this.id + "._showError");
-            if (this._alertDiv !== null) {
-                dojoHtml.set(this._alertDiv, message);
-                return true;
-            }
-            this._alertDiv = dojoConstruct.create("div", {
-                "class": "alert alert-danger",
-                "innerHTML": message
-            });
-            dojoConstruct.place(this._alertDiv, this.domNode);
         },
 
         // Add a validation.
         _addValidation: function (message) {
             logger.debug(this.id + "._addValidation");
-            this._showError(message);
         },
 
         _unsubscribe: function () {
@@ -308,6 +283,7 @@ define([
 
             this._handles = [ objectHandle ];
         },
+
         // Fetch the messages from then given MF
         _fetchObjects: function(){
             logger.debug(this.id + "._fetchObjects");
@@ -316,6 +292,8 @@ define([
                 this._execMF(this._contextObj, this.datasourceMf, dojoLang.hitch(this, this._prepareMessages));
             }
         },
+
+        // Execute a given microflow with the provided parameter and callback
         _execMF: function (obj, mf, cb) {
             logger.debug(this.id + "._execMF", mf);
             if (mf) {
@@ -351,6 +329,8 @@ define([
                 cb();
             }
         },
+
+        // Fetch the given list of messages by the datasource microflow
         _prepareMessages: function (objs) {
             logger.debug(this.id + "._prepareMessages");
 
