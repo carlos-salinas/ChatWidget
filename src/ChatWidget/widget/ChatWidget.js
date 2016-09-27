@@ -134,8 +134,7 @@ define([
 
                         messageObject.set("Author", mx.session.getUserName());
                         messageObject.set("Message", this.sendMessageInputNode.value);
-                        messageObject.set("ConversationId", this._contextObj.get("ConversationID"));
-                        messageObject.set("ClientId", this._contextObj.get("ClientID"));
+                        messageObject.set("ConversationId", this._contextObj.get("ConversationId"));
 
                         mx.data.commit({
                             mxobj: messageObject,
